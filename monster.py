@@ -1,14 +1,18 @@
 import pygame
 from settings import *
 from arrow import Arrow
+from damage import Damage
 import random
+
 
 class Monster(pygame.sprite.Sprite):
     def __init__(self, groups, x, y, arrow_group):
         super().__init__(groups)
 
+        self.screen = pygame.display.get_surface()
         # Group
         self.arrow_group = arrow_group
+        self.damage_group = pygame.sprite.Group()
 
         # Image
         self.image = pygame.Surface((50, 50))
@@ -38,8 +42,11 @@ class Monster(pygame.sprite.Sprite):
         self.health = 3
         self.alive = True
 
+        # Damage Animation
+        self.damage = False
+
     def update_image(self):
-        self.pre_image = self.image_list[self.index]
+        self.pre_image = self.image_list[int(self.index)]
         self.image = pygame.transform.scale(self.pre_image, (50, 50))
 
     def move(self):
@@ -67,7 +74,11 @@ class Monster(pygame.sprite.Sprite):
             self.alive = False
 
     def check_death(self):
-        if self.alive == False:
+        if self.alive == False and self.damage == False:
+            self.speed = 0
+            damage = Damage(self.damage_group, self.rect.centerx, self.rect.centery)
+            self.damage = True
+        if self.damage and len(self.damage_group) == 0:
             self.kill()
 
     def update(self):
@@ -75,3 +86,7 @@ class Monster(pygame.sprite.Sprite):
         self.update_image()
         self.collision_arrow()
         self.check_death()
+
+        # Draw and update damage group
+        self.damage_group.draw(self.screen)
+        self.damage_group.update()
