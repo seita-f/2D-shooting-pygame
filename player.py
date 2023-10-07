@@ -1,11 +1,19 @@
 import pygame
 from settings import *
+from monster import Monster
+from arrow import Arrow
 
 
 class Player(pygame.sprite.Sprite):
 
-    def __init__(self, groups, x, y):
+    def __init__(self, groups, x, y, monster_group):
         super().__init__(groups)
+
+        # Game screen
+        self.screen = pygame.display.get_surface()
+
+        # Enemy group
+        self.monster_group = monster_group
 
         # Image
         self.image = pygame.Surface((50, 50))
@@ -26,6 +34,15 @@ class Player(pygame.sprite.Sprite):
         # Move
         self.direction = pygame.math.Vector2()
         self.speed = 5
+
+        # Arrow group
+        self.arrow_group = pygame.sprite.Group()
+
+        # default arrow
+        self.shoot = False
+        self.timer = 0
+        self.health = 1
+        self.alive = True
 
     def input(self):
         key = pygame.key.get_pressed()
@@ -48,6 +65,30 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction.x = 0
             self.index = 0
+
+        # Z key (arrow)
+        if key[pygame.K_z] and self.shoot == False:
+            arrow = Arrow(self.arrow_group, self.rect.centerx, self.rect.top)
+            self.shoot = True
+
+    def cooldown_arrow(self):
+        if self.shoot:
+            self.timer += 1
+        if self.timer > 10:
+            self.shoot = False
+            self.timer = 0
+
+    def collision_monster(self):
+        for monster in self.monster_group:
+            if self.rect.colliderect(monster.rect):
+                self.health -= 1
+
+        if self.health <= 0:
+            self.alive = False
+
+    def check_death(self):
+        if self.alive == False:
+            self.kill()
 
     def move(self):
 
@@ -84,3 +125,12 @@ class Player(pygame.sprite.Sprite):
         self.update_image()
         # Debug
         # print(self.direction)
+
+        # Draw group and update
+        self.arrow_group.draw(self.screen)
+        self.arrow_group.update()
+        self.cooldown_arrow()
+
+        self.collision_monster()
+        self.check_death()
+
