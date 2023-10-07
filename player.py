@@ -80,7 +80,7 @@ class Player(pygame.sprite.Sprite):
 
     def collision_monster(self):
         for monster in self.monster_group:
-            if self.rect.colliderect(monster.rect):
+            if self.rect.colliderect(monster.rect) and monster.alive:
                 self.health -= 1
 
         if self.health <= 0:
